@@ -1,56 +1,112 @@
 class HsbcPdfStatementParser::Parser 
-      
+  
+  # Creates a new parser from a PDF file.
+  #
+  # === Parameters
+  #
+  # [filename] the filename to parse
   def initialize( filename )
     
-    reader = PDF::Reader.new( filename )
+    @reader = PDF::Reader.new( filename )
     
-    @buff = []
-    reader.pages.each do |page|
-            
-      page_match = page.text.match( /BALANCE\s?BROUGHT\s?FORWARD(?:.*?)\n(.*?)BALANCE\s?CARRIED\s?FORWARD/im )
-      next if page_match.nil?
-
-      @buff += parse_page( page_match[1] )
+  end
+  
+  # Returns an array of the transactions in the document as hashes.
+  #
+  # === Hash keys
+  #
+  # [:date] the date of the transaction _(Date)_
+  # [:type] the type of the transaction, eg ‘VISA’, ‘DD’, ‘ATM’, etc _(String)_
+  # [:details] the details of the transaction. This can span multiple lines _(String)_
+  # [:out] the amount of the transaction, if a debit _(Float, nil)_
+  # [:in] the amount of the transaction, if a credit _(Float, nil)_
+  # [:change] the amount of the transacation: negative if a debit, positive if a credit _(Float)_
+  def transactions
+    
+    @_transactions ||= begin
       
+      current_transaction = nil
+      current_date = nil
+      transactions = []
+      
+      document_text
+        .scan( /BALANCE\s?BROUGHT\s?FORWARD(?:.*?)\n(.*?)BALANCE\s?CARRIED\s?FORWARD/im )
+        .map{ |text| parse_page( text[0] )}
+        .flatten
+        .each do |line|
+        
+          # store the current date
+          current_date = line[:date] unless line[:date].nil?
+        
+          # if we have a type, start a new transaction
+          unless line[:type].nil?
+            transactions << current_transaction unless current_transaction.nil?
+            current_transaction = line.merge( date: current_date )
+            next
+          end
+        
+          # merge things in
+          current_transaction.merge!( line.select{ |k,v| v }, { details: "#{current_transaction[:details]}\n#{line[:details]}" })
+        
+        end
+      
+      # dump the final transaction + return
+      transactions << current_transaction unless current_transaction.nil?
+      transactions
     end
     
   end
   
-  def transactions
+  # Returns the opening balance of the statement read from the table on the first page.
+  def opening_balance
     
-    @_transactions ||= begin
+    @_opening_balance ||= scan_figure( 'Opening Balance' )
+    
+  end
   
-      current_transaction = nil
-      current_date = nil
-      
-      retval = []
-      
-      @buff.each do |line|
-        
-        # store the current date
-        current_date = line[:date] unless line[:date].nil?
-        
-        # if we have a type, start a new transaction
-        unless line[:type].nil?
-          retval << current_transaction unless current_transaction.nil?
-          current_transaction = line.merge( date: current_date )
-          next
-        end
-        
-        # merge things in
-        current_transaction.merge!( line.select{ |k,v| v }, { details: "#{current_transaction[:details]}\n#{line[:details]}" })
-        
-      end
-      
-      # dump the final transaction + return    
-      retval << current_transaction unless current_transaction.nil?
-      retval
-      
-    end
+  # Returns the closing balance of the statement read from the table on the first page.
+  def closing_balance
+    
+    @_closing_balance ||= scan_figure( 'Closing Balance' )
+    
+  end
+  
+  # Returns the total value of payments in during the statement read from the table on the first page (ie: not calculated)
+  def payments_in
+    
+    @_payments_in ||= scan_figure( 'Payments In' )
+    
+  end
+  
+  # Returns the total value of payments out during the statement read from the table on the first page (ie: not calculated)
+  def payments_out
+    
+    @_payments_out ||= scan_figure( 'Payments Out' )
     
   end
   
   private
+  
+  def document_text
+    
+    @text ||= begin
+      
+      @reader.pages.map( &:text ).join
+      
+    end
+    
+  end
+  
+  def scan_figure( search_string )
+    
+    @_first_page ||= @reader.pages.first.text
+    
+    match = Regexp.new( "#{search_string}(?:.*?)([0-9\.\,]{4,})", Regexp::IGNORECASE ).match( @_first_page )
+    return nil if match.nil?
+    
+    match[1].gsub( ',', '' ).to_f
+    
+  end
   
   def parse_page( page_str )
     

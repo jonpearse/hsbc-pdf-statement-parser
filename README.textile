@@ -27,6 +27,15 @@ parser.transactions.each do |tx|
 end
 </pre>
 
+h3. Methods
+
+- @statements@ := returns transactions as an array of hashes (see hash keys section, below) _(Array Hash)_
+- @opening_balance@ := returns the opening balance of the statement _(Float)_
+- @closing_balance@ := returns the closing balance of the statement _(Float)_
+- @payments_in@ := returns the total of all payments in _(Float)_
+- @payments_out@ := returns the total of all payments out _(Float)_
+
+Note that @payments_in@ and @payments_out@ are read from the header section at the top of the statement, and are not calculated from the transactions in the statement.
 
 h3. Transaction hash keys
 
