@@ -1,0 +1,53 @@
+h1. HSBC PDF Statement Parser
+
+This is a _very_ quick and dirty gem that swallows downloaded PDF files from HSBC (UK) and parses them into an array of hashes containing each transaction.
+
+It exists soley because HSBC doesn’t seem to offer any way of exporting old statements as anything other than PDFs, which makes it a pain in the backside to import anything into any kind of finance packages.
+You probably shouldn’t use it (see warnings below)
+
+h2. Installation
+
+Using bundler on the command line:
+
+<pre>
+$ bundle add hsbc_pdf_statement_parser
+$ bundle
+</pre>
+
+h2. Usage
+
+<pre>
+require 'hsbc_pdf_statement_parser'
+
+parser = HsbcPdfStatementParser::Parser.new( 'path/to/statement.pdf' )
+parser.transactions.each do |tx|
+  
+  printf( "%s: %-40s %7.02f\n", tx[:date], tx[:details].lines.first.strip, tx[:change] )
+
+end
+</pre>
+
+
+h3. Transaction hash keys
+
+- @:date@ := a `Date` object describing the date of the transaction _(Date)_
+- @:type@ := the type of the description, eg `DD` for a direct debit, `VIS` for visa, `(((` for contactless _(String)_
+- @:details@ := the text descrption of the transaction. This may span multiple lines _(String)_
+- @:in@ := the amount entering your account, or nil if an outbound transaction _(Float, nil)_
+- @:out@ := the amount leaving your account, or nil if an inbound transaction _(Float, nil)_
+- @:change@ := a calculated field showing the change to your bank balance: negative for debits, positive for credits _(Float)_
+- @:balance@ := the balance of your account after the transaction, if present in the PDF _(Float, nil)_
+
+*Note:* that the @:balance@ key is pulled straight from the PDF and will only be present for the last transaction on a particular day. I’m not doing anything even remotely clever here :)
+
+h2. ⚠️ Warnings
+
+This gem has been thrown together for my own needs, and is offered to the world just in case someone else might want to play around with it. 
+It seems to work pretty well with statements from my Advance account here in the UK, and may also work with other flavours of accounts from elsewhere in the world, but comes with absolutely zero guarantees or assurances.
+
+That is to say: it seems to work OK for mucking around, but I’d recommend not using it for anything mission-critical, or in a situation that might lead you or others into making any kind of financial decisions.
+Any dumb financial decisions made are entirely on you =)
+
+Also, this gem contains a patch for "pdf-reader":https://github.com/yob/pdf-reader to help it better cope with the weird way in which HSBC seems to generate PDFs. This is unapologetically a massive hack, and really could do with someone far smarter than me to come up with a better solution.
+For more information, see "pdf-reader issue #169":https://github.com/yob/pdf-reader/issues/169 which goes into a little more detail about what’s going on (my files seem to terminate the image data with @0xE0@, per my patch)
+
