@@ -31,7 +31,7 @@ module HsbcPdfStatementParser
       match = Regexp.new("#{search_string}(.*?)\n", Regexp::IGNORECASE).match(@reader.first_page)
       raise ParsingError.new("Could not find #{search_string}") if match.nil?
 
-      match[1].strip.gsub(",", "").gsub(/\s/, "").to_d
+      match[1].strip.gsub(/[\s£,]/, "").to_d
     end
 
     private def get_meta
