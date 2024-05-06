@@ -1,0 +1,6 @@
+# One CLI to format the code tree - https://github.com/numtide/treefmt
+
+[formatter.rufo]
+command = "rufo"
+options = [ "-x" ]
+includes = [ "*.rb", "*.gemspec" ]

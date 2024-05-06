@@ -16,4 +16,6 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "pdf-reader", "~> 2.9"
   spec.add_dependency "dry-struct", "~> 1.4"
+
+  spec.add_development_dependency "rufo"
 end
