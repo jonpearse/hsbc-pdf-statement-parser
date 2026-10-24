@@ -84,7 +84,7 @@ For various reasons I’ve not worried too much about trying to maintain backwar
 2. when using parsed transactions, `in` and `out` are now `paid_in` and `paid_out` respectively
 3. any use of `fetch(…)` on parsed transactions will need to be replaced with bare function calls (hash accessors—ie `tx[:date]`—will continue to work)
 
-### Nonbreaking changes
+### Nonbreaking changes
 
 Aside from the new properties added to the main Statement type, the biggest difference is that a statement’s `balance` property is now always specified, whereas it was only specified once a day in V1.x
 
