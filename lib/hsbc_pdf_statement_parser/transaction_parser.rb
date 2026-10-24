@@ -26,7 +26,7 @@ module HsbcPdfStatementParser
 
       # parse out all the
       page_data.lines.reduce([]) do |parsed, line|
-        next parsed if line.strip.empty?
+        next parsed if line.strip.length < 2
 
         parsed << parse_line(line, column_map, max_line_length)
       end
@@ -38,7 +38,7 @@ module HsbcPdfStatementParser
       # scan the content + look for obvious columns
       input.lines.each do |line|
         # bounce if there’s no point…
-        next if line.strip.empty?
+        next if line.strip.length < 2
 
         # map the state
         line.split("").each.with_index { |chr, i| state[i] = "X" if chr != " " }
