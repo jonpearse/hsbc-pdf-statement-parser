@@ -13,9 +13,10 @@ Gem::Specification.new do |spec|
 
   spec.version = HsbcPdfStatementParser::VERSION
   spec.files = `git ls-files`.split($\)
+  spec.required_ruby_version = '>= 3.2.3'
 
-  spec.add_dependency "pdf-reader", "~> 2.9"
-  spec.add_dependency "dry-struct", "~> 1.4"
+  spec.add_dependency "pdf-reader", "~> 2.16"
+  spec.add_dependency "dry-struct", "~> 1.8"
 
   spec.add_development_dependency "rufo"
 end
