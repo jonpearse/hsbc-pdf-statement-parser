@@ -1,0 +1,5 @@
+# local test harness
+test.rb
+
+# Ignore built gems
+*.gem
